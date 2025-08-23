@@ -8,6 +8,8 @@ import { AdminPage } from './components/AdminPage';
 import { AuthWrapper } from './components/AuthWrapper';
 import { useAuth } from './contexts/AuthContext';
 import type { Quiz, QuizResult } from './types/quiz';
+import logo from "./Quiz_logo.jpg"
+ 
 
 const primary = '#2563eb';
 const secondary = '#f5f6fa';
@@ -137,15 +139,14 @@ function AppContent() {
           <Stack direction="row" alignItems="center" spacing={2}>
             {/* <Box sx={{ p: 1, bgcolor: '#e0e7ff', borderRadius: 2, display: 'flex', alignItems: 'center' }}>
               <Code2 size={28} color={primary} />
-            </Box>
-            <Box>
-              <Typography variant="h6" fontWeight={700} color="text.primary">
-                Interview Buzz
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Master your coding skills with AI-powered quizzes
-              </Typography>
             </Box> */}
+            <Box>
+             <img
+            src={logo}
+            alt="Logo"
+            style={{ width: '250px', height: '80px', margin: '0 auto', display: 'block' }}
+          />
+            </Box>
             
             {/* Navigation buttons */}
             {user?.isAdmin && (
@@ -165,12 +166,15 @@ function AppContent() {
                 >
                   Admin
                 </Button>
+                
               </Stack>
             )}
           </Stack>
 
           {/* User Menu */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+           
+
             <Button
               onClick={handleMenuOpen}
               sx={{
@@ -187,6 +191,7 @@ function AppContent() {
               <Avatar sx={{ width: 32, height: 32, bgcolor: primary }}>
                 <User size={16} />
               </Avatar>
+
               <Typography variant="body2" fontWeight={500}>
                 {user?.name}
               </Typography>
