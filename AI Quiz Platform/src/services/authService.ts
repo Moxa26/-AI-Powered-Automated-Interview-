@@ -1,7 +1,8 @@
 import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../types/auth';
-import type { QuizResult } from '../types/quiz';
+import type { QuizResult, Quiz } from '../types/quiz';
 
-const API_BASE_URL = process.env.BACK_END_POINT || 'http://192.168.1.79:4000/api'; // Quiz score API endpoint
+const API_BASE_URL = process.env.BACK_END_POINT || 'http://192.168.1.79:4000/api'; // Quiz score API endp
+// oint
 
 export class AuthService {
   private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
@@ -178,6 +179,40 @@ export class AuthService {
     const seconds = totalSeconds % 60;
     
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  // Save complete quiz details with questions and answers
+  static async saveQuizDetails(quiz: Quiz, result: QuizResult, userId: string): Promise<void> {
+    try {
+      const quizDetailsData = {
+        userId: parseInt(userId), // Include userId in the payload
+        questions: quiz.questions.map((question, index) => {
+          const userAnswer = result.answers[index];
+          return {
+            question: question.question,
+            options: question.options,
+            correctAnswer: question.correctAnswer,
+            explanation: question.explanation || '',
+            userSelectedAnswer: userAnswer.selectedAnswer !== undefined ? userAnswer.selectedAnswer : null,
+            userTextAnswer: userAnswer.textAnswer || null,
+            isCorrect: userAnswer.isCorrect,
+            questionType: question.questionType,
+            codeSnippet: question.codeSnippet || null,
+            codeLanguage: question.codeLanguage || null
+          };
+        })
+      };
+
+      await this.makeRequest('/quizzesDetail', {
+        method: 'POST',
+        body: JSON.stringify(quizDetailsData),
+      });
+
+      console.log('Quiz details saved successfully:', quizDetailsData);
+    } catch (error) {
+      console.error('Failed to save quiz details:', error);
+      // Don't throw error to prevent disrupting user experience
+    }
   }
 
   // Helper method to generate feedback based on score

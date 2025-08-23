@@ -338,10 +338,15 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
     // Save quiz score to backend API
     if (user?.id) {
       try {
+        // Save quiz score
         await AuthService.saveQuizScore(user.id, result);
         console.log('Quiz score saved successfully');
+        
+        // Save complete quiz details with questions and answers
+        await AuthService.saveQuizDetails(quiz, result, user.id);
+        console.log('Quiz details saved successfully');
       } catch (error) {
-        console.error('Failed to save quiz score:', error);
+        console.error('Failed to save quiz data:', error);
         // Continue with normal flow even if API call fails
       }
     }
