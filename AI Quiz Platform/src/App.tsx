@@ -22,7 +22,7 @@ function AppContent() {
     setCurrentQuiz(quiz);
     setCurrentView('quiz');
   };
-
+ 
   const handleQuizComplete = (result: QuizResult) => {
     setQuizResult(result);
     setCurrentView('results');
