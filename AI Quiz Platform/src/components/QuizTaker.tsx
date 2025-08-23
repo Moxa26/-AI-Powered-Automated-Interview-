@@ -4,6 +4,7 @@ import AceEditor from 'react-ace';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Quiz, QuizResult } from '../types/quiz';
+import { configureAceEditor, getAceMode, getAceEditorOptions } from '../utils/aceConfig';
 import {
   Box,
   Card,
@@ -39,6 +40,11 @@ interface QuizTakerProps {
 }
 
 export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBack }) => {
+  // Configure ACE Editor on component mount to prevent worker loading errors
+  useEffect(() => {
+    configureAceEditor();
+  }, []);
+  
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [textAnswers, setTextAnswers] = useState<string[]>([]);
@@ -340,21 +346,22 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const getAceMode = (language: string) => {
-    switch (language.toLowerCase()) {
-      case 'javascript': return 'javascript';
-      case 'typescript': return 'typescript';
-      case 'python': return 'python';
-      case 'java': return 'java';
-      case 'go': return 'golang';
-      case 'rust': return 'rust';
-      case 'html': return 'html';
-      case 'csharp': return 'csharp';
-      case 'sql': return 'sql';
-      case 'json': return 'json';
-      default: return 'text';
+  const getAceEditorSettings = () => ({
+    ...getAceEditorOptions(),
+    mode: getAceMode(currentQuestion.codeLanguage || 'javascript'),
+    theme: 'github',
+    value: textAnswers[currentQuestionIndex] || '',
+    onChange: handleTextAnswerChange,
+    onLoad: handleCodeEditorLoad,
+    name: `code-editor-${currentQuestionIndex}`,
+    editorProps: { $blockScrolling: true },
+    width: '100%',
+    height: '200px',
+    style: {
+      borderRadius: '8px',
+      border: '1px solid #e0e0e0',
     }
-  };
+  });
 
   const renderQuestion = () => {
     if (currentQuestion.questionType === 'code-input') {
@@ -386,32 +393,7 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
             <Typography variant="subtitle2" color="text.secondary" mb={1}>
               Your answer:
             </Typography>
-            <AceEditor
-              mode={getAceMode(currentQuestion.codeLanguage || 'javascript')}
-              theme="github"
-              value={textAnswers[currentQuestionIndex] || ''}
-              onChange={handleTextAnswerChange}
-              onLoad={handleCodeEditorLoad}
-              name={`code-editor-${currentQuestionIndex}`}
-              editorProps={{ $blockScrolling: true }}
-              width="100%"
-              height="200px"
-              fontSize={14}
-              showPrintMargin={true}
-              showGutter={true}
-              highlightActiveLine={true}
-              setOptions={{
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                enableSnippets: false,
-                showLineNumbers: true,
-                tabSize: 2,
-              }}
-              style={{
-                borderRadius: '8px',
-                border: '1px solid #e0e0e0',
-              }}
-            />
+            <AceEditor {...getAceEditorSettings()} />
           </Box>
           
           <Alert severity="info" sx={{ mb: 2 }}>
