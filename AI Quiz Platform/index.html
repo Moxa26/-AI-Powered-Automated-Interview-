@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Quiz & Interview Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <i class="fas fa-brain"></i>
+                    <span>AI Quiz Platform</span>
+                </div>
+                <div class="nav-menu">
+                    <button class="nav-btn active" data-section="quiz-generator">Quiz Generator</button>
+                    <button class="nav-btn" data-section="quiz-taker">Quiz Taker</button>
+                    <button class="nav-btn" data-section="resume-screening">Resume Screening</button>
+                    <button class="nav-btn" data-section="interview-wizard">Interview Wizard</button>
+                    <button class="nav-btn" data-section="coding-assessment">Coding Assessment</button>
+                    <button class="nav-btn" data-section="candidate-ranking">Candidate Ranking</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Quiz Generator Section -->
+            <section id="quiz-generator" class="section active">
+                <div class="container">
+                    <h1 class="section-title">AI Quiz Generator</h1>
+                    <p class="section-description">Generate customized quizzes using AI for any topic or subject</p>
+                    
+                    <div class="quiz-form">
+                        <div class="form-group">
+                            <label for="topic">Topic/Subject:</label>
+                            <input type="text" id="topic" placeholder="e.g., JavaScript, React, Data Structures">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="difficulty">Difficulty Level:</label>
+                            <select id="difficulty">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="questionCount">Number of Questions:</label>
+                            <input type="number" id="questionCount" min="1" max="20" value="5">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="questionType">Question Type:</label>
+                            <select id="questionType">
+                                <option value="multiple-choice">Multiple Choice</option>
+                                <option value="true-false">True/False</option>
+                                <option value="short-answer">Short Answer</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="generateQuiz()">
+                            <i class="fas fa-magic"></i> Generate Quiz
+                        </button>
+                    </div>
+                    
+                    <div id="quiz-output" class="quiz-output hidden">
+                        <h3>Generated Quiz</h3>
+                        <div id="quiz-content"></div>
+                        <button class="btn btn-secondary" onclick="exportQuiz()">
+                            <i class="fas fa-download"></i> Export Quiz
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quiz Taker Section -->
+            <section id="quiz-taker" class="section">
+                <div class="container">
+                    <h1 class="section-title">Quiz Taker</h1>
+                    <p class="section-description">Take quizzes and test your knowledge</p>
+                    
+                    <div class="quiz-upload">
+                        <div class="upload-area" id="upload-area">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Upload a quiz file or paste quiz content</p>
+                            <input type="file" id="quiz-file" accept=".json,.txt" style="display: none;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quiz-content-input">Or paste quiz content:</label>
+                            <textarea id="quiz-content-input" placeholder="Paste your quiz content here..."></textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="startQuiz()">
+                            <i class="fas fa-play"></i> Start Quiz
+                        </button>
+                    </div>
+                    
+                    <div id="quiz-interface" class="quiz-interface hidden">
+                        <div class="quiz-header">
+                            <h3 id="quiz-title">Quiz</h3>
+                            <div class="quiz-progress">
+                                Question <span id="current-question">1</span> of <span id="total-questions">5</span>
+                            </div>
+                        </div>
+                        
+                        <div id="question-container" class="question-container"></div>
+                        
+                        <div class="quiz-navigation">
+                            <button class="btn btn-secondary" id="prev-btn" onclick="previousQuestion()">Previous</button>
+                            <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()">Next</button>
+                            <button class="btn btn-success" id="submit-btn" onclick="submitQuiz()" style="display: none;">Submit Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Resume Screening Section -->
+            <section id="resume-screening" class="section">
+                <div class="container">
+                    <h1 class="section-title">AI Resume Screening</h1>
+                    <p class="section-description">Upload resumes and get AI-powered analysis and scoring</p>
+                    
+                    <div class="resume-form">
+                        <div class="form-group">
+                            <label for="job-description">Job Description:</label>
+                            <textarea id="job-description" placeholder="Paste the job description here..."></textarea>
+                        </div>
+                        
+                        <div class="resume-upload">
+                            <div class="upload-area" id="resume-upload-area">
+                                <i class="fas fa-file-upload"></i>
+                                <p>Upload Resume (PDF, DOCX, or TXT)</p>
+                                <input type="file" id="resume-file" accept=".pdf,.docx,.txt" style="display: none;">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="analyzeResume()">
+                            <i class="fas fa-search"></i> Analyze Resume
+                        </button>
+                    </div>
+                    
+                    <div id="resume-results" class="resume-results hidden">
+                        <h3>Resume Analysis Results</h3>
+                        <div id="resume-content"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interview Wizard Section -->
+            <section id="interview-wizard" class="section">
+                <div class="container">
+                    <h1 class="section-title">AI Interview Wizard</h1>
+                    <p class="section-description">Generate personalized interview questions and conduct AI-powered interviews</p>
+                    
+                    <div class="interview-form">
+                        <div class="form-group">
+                            <label for="candidate-role">Candidate Role:</label>
+                            <input type="text" id="candidate-role" placeholder="e.g., Frontend Developer, Data Scientist">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="experience-level">Experience Level:</label>
+                            <select id="experience-level">
+                                <option value="entry">Entry Level</option>
+                                <option value="mid">Mid Level</option>
+                                <option value="senior">Senior Level</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="interview-focus">Interview Focus:</label>
+                            <select id="interview-focus">
+                                <option value="technical">Technical Skills</option>
+                                <option value="behavioral">Behavioral</option>
+                                <option value="mixed">Mixed</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="generateInterview()">
+                            <i class="fas fa-wand-magic-sparkles"></i> Generate Interview
+                        </button>
+                    </div>
+                    
+                    <div id="interview-interface" class="interview-interface hidden">
+                        <div class="interview-header">
+                            <h3>AI Interview Session</h3>
+                            <div class="interview-progress">
+                                Question <span id="interview-question-num">1</span> of <span id="interview-total">5</span>
+                            </div>
+                        </div>
+                        
+                        <div id="interview-question" class="interview-question"></div>
+                        
+                        <div class="interview-answer">
+                            <label for="candidate-answer">Your Answer:</label>
+                            <textarea id="candidate-answer" placeholder="Type your answer here..."></textarea>
+                            <button class="btn btn-primary" onclick="submitAnswer()">
+                                <i class="fas fa-paper-plane"></i> Submit Answer
+                            </button>
+                        </div>
+                        
+                        <div id="ai-feedback" class="ai-feedback hidden"></div>
+                        
+                        <div class="interview-navigation">
+                            <button class="btn btn-secondary" onclick="nextInterviewQuestion()">Next Question</button>
+                            <button class="btn btn-success" onclick="finishInterview()" style="display: none;">Finish Interview</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Coding Assessment Section -->
+            <section id="coding-assessment" class="section">
+                <div class="container">
+                    <h1 class="section-title">AI Coding Assessment</h1>
+                    <p class="section-description">Practice coding problems with AI-powered evaluation and feedback</p>
+                    
+                    <div class="coding-form">
+                        <div class="form-group">
+                            <label for="problem-difficulty">Problem Difficulty:</label>
+                            <select id="problem-difficulty">
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="programming-language">Programming Language:</label>
+                            <select id="programming-language">
+                                <option value="javascript">JavaScript</option>
+                                <option value="python">Python</option>
+                                <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="generateCodingProblem()">
+                            <i class="fas fa-code"></i> Generate Problem
+                        </button>
+                    </div>
+                    
+                    <div id="coding-interface" class="coding-interface hidden">
+                        <div class="problem-description">
+                            <h3>Problem Description</h3>
+                            <div id="problem-text"></div>
+                        </div>
+                        
+                        <div class="code-editor">
+                            <h3>Your Solution</h3>
+                            <textarea id="code-input" placeholder="Write your code here..."></textarea>
+                        </div>
+                        
+                        <div class="coding-actions">
+                            <button class="btn btn-secondary" onclick="runCode()">
+                                <i class="fas fa-play"></i> Run Code
+                            </button>
+                            <button class="btn btn-primary" onclick="submitCode()">
+                                <i class="fas fa-check"></i> Submit Solution
+                            </button>
+                        </div>
+                        
+                        <div id="code-results" class="code-results hidden">
+                            <h3>Results</h3>
+                            <div id="execution-output"></div>
+                            <div id="ai-evaluation"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Candidate Ranking Section -->
+            <section id="candidate-ranking" class="section">
+                <div class="container">
+                    <h1 class="section-title">AI Candidate Ranking</h1>
+                    <p class="section-description">Compare and rank candidates using AI-powered analysis</p>
+                    
+                    <div class="ranking-form">
+                        <div class="form-group">
+                            <label for="ranking-criteria">Ranking Criteria:</label>
+                            <select id="ranking-criteria">
+                                <option value="overall">Overall Score</option>
+                                <option value="technical">Technical Skills</option>
+                                <option value="experience">Experience</option>
+                                <option value="culture-fit">Culture Fit</option>
+                            </select>
+                        </div>
+                        
+                        <div class="candidates-upload">
+                            <div class="upload-area" id="candidates-upload-area">
+                                <i class="fas fa-users"></i>
+                                <p>Upload candidate data (CSV, JSON, or multiple resumes)</p>
+                                <input type="file" id="candidates-file" accept=".csv,.json,.pdf,.docx" multiple style="display: none;">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="rankCandidates()">
+                            <i class="fas fa-sort"></i> Rank Candidates
+                        </button>
+                    </div>
+                    
+                    <div id="ranking-results" class="ranking-results hidden">
+                        <h3>Candidate Rankings</h3>
+                        <div id="candidates-list"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="spinner"></div>
+            <p>Processing your request...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h3>Success!</h3>
+            <p id="success-message"></p>
+            <button class="btn btn-primary" onclick="closeModal('success-modal')">OK</button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="error-modal" class="modal hidden">
+        <div class="modal-content">
+            <i class="fas fa-exclamation-circle error-icon"></i>
+            <h3>Error</h3>
+            <p id="error-message"></p>
+            <button class="btn btn-primary" onclick="closeModal('error-modal')">OK</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
