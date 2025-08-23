@@ -5,6 +5,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Quiz, QuizResult } from '../types/quiz';
 import { configureAceEditor, getAceMode, getAceEditorOptions } from '../utils/aceConfig';
+import { AuthService } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Box,
   Card,
@@ -40,6 +42,7 @@ interface QuizTakerProps {
 }
 
 export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBack }) => {
+  const { user } = useAuth();
   // Configure ACE Editor on component mount to prevent worker loading errors
   useEffect(() => {
     configureAceEditor();
@@ -303,7 +306,7 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
     }
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const timeTaken = Date.now() - timeStarted.getTime();
     const correctAnswers = quiz.questions.filter((question, index) => {
       if (question.questionType === 'code-input') {
@@ -331,6 +334,17 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
       })),
       completedAt: new Date(),
     };
+
+    // Save quiz score to backend API
+    if (user?.id) {
+      try {
+        await AuthService.saveQuizScore(user.id, result);
+        console.log('Quiz score saved successfully');
+      } catch (error) {
+        console.error('Failed to save quiz score:', error);
+        // Continue with normal flow even if API call fails
+      }
+    }
 
     onQuizComplete(result);
   };

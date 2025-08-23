@@ -1,6 +1,7 @@
 import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../types/auth';
+import type { QuizResult } from '../types/quiz';
 
-const API_BASE_URL = 'http://192.168.1.79:4000/api'; // Your real API endpoint
+const API_BASE_URL = process.env.BACK_END_POINT || 'http://192.168.1.79:4000/api'; // Quiz score API endpoint
 
 export class AuthService {
   private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
@@ -139,5 +140,52 @@ export class AuthService {
       console.log('Real API failed for getCurrentUser:', error);
       throw error;
     }
+  }
+
+  // Save quiz score to backend API
+  static async saveQuizScore(userId: string, result: QuizResult): Promise<void> {
+    try {
+      const timeTakenFormatted = this.formatTimeForAPI(result.timeTaken);
+      const feedback = this.generateFeedback(result.score);
+      
+      const scoreData = {
+        userId: parseInt(userId),
+        quizId: 2, // Fixed quizId as requested
+        scorePercent: parseFloat(result.score.toFixed(2)),
+        correctAnswers: result.correctAnswers,
+        totalQuestions: result.totalQuestions,
+        timeTaken: timeTakenFormatted,
+        feedback: feedback
+      };
+
+      await this.makeRequest('/save-quiz-score', {
+        method: 'POST',
+        body: JSON.stringify(scoreData),
+      });
+
+      console.log('Quiz score saved successfully:', scoreData);
+    } catch (error) {
+      console.error('Failed to save quiz score:', error);
+      // Don't throw error to prevent disrupting user experience
+    }
+  }
+
+  // Helper method to format time for API (HH:MM:SS format)
+  private static formatTimeForAPI(milliseconds: number): string {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  // Helper method to generate feedback based on score
+  private static generateFeedback(score: number): string {
+    if (score >= 90) return 'Excellent! Outstanding performance!';
+    if (score >= 80) return 'Great job! Well done!';
+    if (score >= 70) return 'Good work! Keep it up!';
+    if (score >= 60) return 'Not bad! Room for improvement.';
+    return 'Keep practicing! You can do better!';
   }
 }
