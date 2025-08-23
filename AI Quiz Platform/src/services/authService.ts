@@ -1,6 +1,6 @@
-import type { LoginRequest, RegisterRequest, AuthResponse } from '../types/auth';
+import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../types/auth';
 
-const API_BASE_URL = 'http://192.168.1.79:5000/api'; // Your real API endpoint
+const API_BASE_URL = 'http://192.168.1.79:4000/api'; // Your real API endpoint
 
 export class AuthService {
   private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
@@ -25,8 +25,9 @@ export class AuthService {
     }
   }
 
-  static async login(credentials: LoginRequest): Promise<AuthResponse> {
+  static async login(credentials: LoginRequest): Promise<{ user: User; token: string; message: string; isAdmin: boolean }> {
     try {
+      debugger;
       // Transform the request to match your API format
       const apiRequest = {
         username: credentials.username, // Use username directly
@@ -39,26 +40,29 @@ export class AuthService {
         body: JSON.stringify(apiRequest),
       });
 
-      // Transform the response to match our expected format
+      // Transform the API response to our internal User format
+      const user: User = {
+        id: response.user?.id?.toString() || Date.now().toString(),
+        username: response.user?.username || credentials.username,
+        name: response.user?.username || credentials.username, // Use username as name
+        isAdmin: response.user?.is_admin || false,
+        createdAt: new Date(),
+        lastLoginAt: new Date(),
+      };
+
       return {
-        user: {
-          id: response.user?.id || Date.now().toString(),
-          username: credentials.username, // Use the original username
-          name: response.user?.name || response.user?.username || 'User',
-          createdAt: new Date(),
-          lastLoginAt: new Date(),
-        },
-        token: response.token || (response as any).access_token || 'token-' + Date.now(),
+        user,
+        token: response.token || 'token-' + Date.now(),
         message: response.message || 'Login successful',
+        isAdmin: response.user?.is_admin || false,
       };
     } catch (error) {
-      console.log('Real API failed, falling back to mock:', error);
-      // Fallback to mock API
-      return this.mockLogin(credentials);
+      console.log('Real API failed:', error);
+      throw new Error('Login failed. Please check your credentials and try again.');
     }
   }
 
-  static async register(userData: RegisterRequest): Promise<AuthResponse> {
+  static async register(userData: RegisterRequest): Promise<{ user: User; token: string; message: string; isAdmin: boolean }> {
     try {
       // Transform the request to match your API format if you have a register endpoint
       const apiRequest = {
@@ -73,21 +77,24 @@ export class AuthService {
         body: JSON.stringify(apiRequest),
       });
 
-      // Transform the response to match our expected format
+      // Transform the API response to our internal User format
+      const user: User = {
+        id: response.user?.id?.toString() || Date.now().toString(),
+        username: response.user?.username || userData.username,
+        name: userData.name,
+        isAdmin: response.user?.is_admin || false,
+        createdAt: new Date(),
+      };
+
       return {
-        user: {
-          id: response.user?.id || Date.now().toString(),
-          username: userData.username,
-          name: response.user?.name || userData.name,
-          createdAt: new Date(),
-        },
-        token: response.token || (response as any).access_token || 'token-' + Date.now(),
+        user,
+        token: response.token || 'token-' + Date.now(),
         message: response.message || 'Registration successful',
+        isAdmin: response.user?.is_admin || false,
       };
     } catch (error) {
-      console.log('Real API failed, falling back to mock:', error);
-      // Fallback to mock API
-      return this.mockRegister(userData);
+      console.log('Real API failed:', error);
+      throw new Error('Registration failed. Please try again.');
     }
   }
 
@@ -97,7 +104,7 @@ export class AuthService {
     localStorage.removeItem('user');
   }
 
-  static async getCurrentUser(): Promise<AuthResponse> {
+  static async getCurrentUser(): Promise<{ user: User; token: string; message: string; isAdmin: boolean }> {
     const token = localStorage.getItem('authToken');
     if (!token) {
       throw new Error('No authentication token found');
@@ -112,58 +119,25 @@ export class AuthService {
         },
       });
 
-      return response;
+      // Transform API response to internal format
+      const user: User = {
+        id: response.user?.id?.toString() || Date.now().toString(),
+        username: response.user?.username || 'User',
+        name: response.user?.username || 'User',
+        isAdmin: response.user?.is_admin || false,
+        createdAt: new Date(),
+        lastLoginAt: new Date(),
+      };
+
+      return {
+        user,
+        token: response.token || token,
+        message: response.message || 'User retrieved successfully',
+        isAdmin: response.user?.is_admin || false,
+      };
     } catch (error) {
       console.log('Real API failed for getCurrentUser:', error);
       throw error;
     }
-  }
-
-  // Mock API for development (fallback when real API is not available)
-  static async mockLogin(credentials: LoginRequest): Promise<AuthResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Mock validation
-    if (credentials.username === 'Jeminee' && credentials.password === 'Admin@123') {
-      return {
-        user: {
-          id: '1',
-          username: credentials.username,
-          name: 'Demo User',
-          createdAt: new Date(),
-          lastLoginAt: new Date(),
-        },
-        token: 'mock-jwt-token-' + Date.now(),
-        message: 'Login successful',
-      };
-    }
-
-    throw new Error('Invalid credentials');
-  }
-
-  static async mockRegister(userData: RegisterRequest): Promise<AuthResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Mock validation
-    if (userData.password !== userData.confirmPassword) {
-      throw new Error('Passwords do not match');
-    }
-
-    if (userData.password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
-    }
-
-    return {
-      user: {
-        id: Date.now().toString(),
-        username: userData.username,
-        name: userData.name,
-        createdAt: new Date(),
-      },
-      token: 'mock-jwt-token-' + Date.now(),
-      message: 'Registration successful',
-    };
   }
 }

@@ -2,6 +2,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
+  isAdmin?: boolean;
   createdAt: Date;
   lastLoginAt?: Date;
 }
@@ -19,9 +20,15 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-  user: User;
-  token: string;
+  success?: boolean;
+  user: {
+    id: number | string;
+    username: string;
+    is_admin?: boolean;
+  };
+  token?: string;
   message: string;
+  isAdmin?: boolean;
 }
 
 export interface AuthState {

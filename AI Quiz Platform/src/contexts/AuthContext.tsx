@@ -3,7 +3,7 @@ import type { User, AuthState } from '../types/auth';
 import { AuthService } from '../services/authService';
 
 interface AuthContextType extends AuthState {
-  login: (user: User, token: string) => void;
+  login: (user: User, token: string, isAdmin?: boolean) => void;
   logout: () => void;
   register: (user: User, token: string) => void;
 }
@@ -68,7 +68,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  const login = (user: User, token: string) => {
+  const login = (user: User, token: string, isAdmin?: boolean) => {
+    // Store auth data in localStorage
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    
     setAuthState({
       user,
       token,
@@ -79,6 +83,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = (user: User, token: string) => {
+    // Store auth data in localStorage
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    
     setAuthState({
       user,
       token,

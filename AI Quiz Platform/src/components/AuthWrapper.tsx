@@ -16,8 +16,11 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const handleSwitchToRegister = () => setAuthView('register');
   const handleSwitchToLogin = () => setAuthView('login');
 
-  const handleLoginSuccess = (user: any, token: string) => {
-    login(user, token);
+  const handleLoginSuccess = (user: any, token: string, isAdmin?: boolean) => {
+    login(user, token, isAdmin);
+    
+    // If user is admin, redirect will be handled in the main App component
+    // The admin check will be done there using user.isAdmin
   };
 
   const handleRegisterSuccess = (user: any, token: string) => {

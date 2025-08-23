@@ -17,7 +17,7 @@ import type { LoginRequest } from '../types/auth';
 
 interface LoginProps {
   onSwitchToRegister: () => void;
-  onLoginSuccess: (user: any, token: string) => void;
+  onLoginSuccess: (user: any, token: string, isAdmin?: boolean) => void;
 }
 
 export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => {
@@ -52,7 +52,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       
-      onLoginSuccess(response.user, response.token);
+      onLoginSuccess(response.user, response.token, response.isAdmin);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
@@ -175,13 +175,6 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess
               >
                 Sign up
               </Link> */}
-            </Typography>
-          </Box>
-
-          {/* Demo credentials hint */}
-          <Box sx={{ mt: 3, p: 2, bgcolor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
-            <Typography variant="caption" color="text.secondary">
-              Demo: Jeminee / Admin@123
             </Typography>
           </Box>
         </Box>
