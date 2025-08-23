@@ -4,9 +4,10 @@ require("dotenv").config();
 const express = require("express");
 const { Pool } = require("pg");
 const cors = require("cors");
+const { use } = require("react");
 
 const app = express();
-const port = 5000;
+const port = 4000;
 
 // PostgreSQL connection pool
 // Use explicit credentials to avoid SASL error
@@ -24,74 +25,76 @@ app.use(express.json()); // no need for body-parser in modern Express
 // ✅ Login
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
-
-  console.log("🔐 Login attempt:");
-  console.log("Username:", username);
-  console.log("Password:", password);
-
   try {
     const result = await pool.query(
       "SELECT * FROM users WHERE username = $1 AND password_hash = $2",
       [username, password]
     );
 
-    console.log("📦 Query result:", result.rows);
-
     if (result.rows.length > 0) {
-      console.log("✅ Login successful for user:", username);
-      res.json({ success: true, message: "Login successful" });
+      const user = result.rows[0];
+      res.json({
+        success: true,
+        message: "Login successful",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          is_admin: user.is_admin
+        }
+      });
     } else {
-      console.log("❌ Invalid credentials for user:", username);
       res.status(401).json({ success: false, message: "Invalid credentials" });
     }
   } catch (err) {
-    console.error("🚨 Login error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-// ✅ Save quiz
-app.post("/api/quizzes", async (req, res) => {
+// ✅ Save quizzesDetail
+app.post("/api/quizzesDetail", async (req, res) => {
   const client = await pool.connect();
   try {
-    const { topic, difficulty, questionType, questions } = req.body;
+    const { userId, questions } = req.body;
+
+    if (!userId || !questions || !Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ error: "quizId and questions are required" });
+    }
 
     await client.query("BEGIN");
 
-    const quizResult = await client.query(
-      `INSERT INTO quizzes (topic, difficulty, question_type) 
-       VALUES ($1, $2, $3) RETURNING id`,
-      [topic, difficulty, questionType]
-    );
-
-    const quizId = quizResult.rows[0].id;
-
     for (const q of questions) {
+      if (!q.question || !q.options || q.correctAnswer === undefined) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({ error: "Each question must have question, options, and correctAnswer" });
+      }
+
       await client.query(
-        `INSERT INTO quiz_questions (quiz_id, question, options, correct_answer, explanation)
+        `INSERT INTO quiz_questions (user_id, question, options, correct_answer, explanation)
          VALUES ($1, $2, $3, $4, $5)`,
-        [quizId, q.question, q.options, q.correctAnswer, q.explanation]
+        [userId, q.question, q.options, q.correctAnswer, q.explanation || null]
       );
     }
 
     await client.query("COMMIT");
 
-    res.json({ quizId });
+    res.json({ success: true, userId, inserted: questions.length });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("Error saving quiz:", err);
-    res.status(500).json({ error: "Failed to save quiz" });
+    console.error("Error saving quiz questions:", err.message);
+    res.status(500).json({ error: "Failed to save quiz questions", details: err.message });
   } finally {
     client.release();
   }
 });
 
-// ✅ Get quiz by ID
-app.get("/api/quizzes/:id", async (req, res) => {
+// ✅ Get quizzesDetail by ID
+app.get("/api/quizzesDetail/:id", async (req, res) => {
   try {
     const quizId = req.params.id;
 
-    const quizResult = await pool.query("SELECT * FROM quizzes WHERE id = $1", [
+    const quizResult = await pool.query("SELECT * FROM quiz_questions  WHERE id = $1", [
       quizId,
     ]);
 
@@ -114,7 +117,7 @@ app.get("/api/quizzes/:id", async (req, res) => {
   }
 });
 
-// ✅ Save quiz score
+// ✅ Save quizzesDetail score
 app.post("/api/save-quiz-score", async (req, res) => {
   const {
     userId,
@@ -163,6 +166,148 @@ app.post("/api/save-quiz-score", async (req, res) => {
     });
   }
 });
+
+
+// ======================= USERS CRUD =======================
+
+// Create User
+app.post("/api/users-with-quiz", async (req, res) => {
+  const { username, password, topic, difficulty, question_type } = req.body;
+
+  if (!username || !password || !topic || !difficulty || !question_type) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const userResult = await client.query(
+      `INSERT INTO users (username, password_hash, topic, difficulty, question_type)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, username, topic, difficulty, question_type, created_at`,
+      [username, password, topic, difficulty, question_type]
+    );
+
+    const user = userResult.rows[0];
+
+    await client.query("COMMIT");
+
+    res.json({ success: true, user });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error creating user with quiz:", err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
+app.get("/api/quiz-by-users", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        id AS user_id,
+        username,
+        topic AS quiz_topic,
+        difficulty AS quiz_difficulty,
+        question_type AS quiz_question_type,
+        created_at
+      FROM users
+      ORDER BY created_at DESC
+    `);
+
+    res.json({ success: true, quizzes: result.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
+  }
+});
+
+app.get("/api/quiz-by-user/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(`
+      SELECT 
+        id AS user_id,
+        username,
+        topic AS quiz_topic,
+        difficulty AS quiz_difficulty,
+        question_type AS quiz_question_type,
+        created_at
+      FROM users
+      WHERE id = $1
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, user: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
+  }
+});
+
+app.put("/api/update-user-with-quiz/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const { username, password, topic, difficulty, question_type } = req.body;
+
+  if (!username || !password || !topic || !difficulty || !question_type) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Update user with quiz fields directly
+    const userResult = await client.query(
+      `UPDATE users 
+       SET username = $1, password_hash = $2, topic = $3, difficulty = $4, question_type = $5
+       WHERE id = $6
+       RETURNING id, username, topic, difficulty, question_type, created_at`,
+      [username, password, topic, difficulty, question_type, userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = userResult.rows[0];
+
+    await client.query("COMMIT");
+
+    res.json({ success: true, user });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error updating user with quiz:", err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      "DELETE FROM users WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rows.length > 0) {
+      res.json({ success: true, message: "User deleted", user: result.rows[0] });
+    } else {
+      res.status(404).json({ success: false, message: "User not found" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
+  }
+});
+
+
 
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
