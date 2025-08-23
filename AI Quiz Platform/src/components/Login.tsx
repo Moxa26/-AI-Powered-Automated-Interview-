@@ -1,91 +1,187 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import {
+  Box,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  Link,
+  Alert,
+  CircularProgress,
+  InputAdornment,
+  IconButton,
+} from '@mui/material';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { AuthService } from '../services/authService';
+import type { LoginRequest } from '../types/auth';
+import logo from "../Quiz_logo.jpg"
 
 interface LoginProps {
-  onLoginSuccess: () => void;
+  onSwitchToRegister: () => void;
+  onLoginSuccess: (user: any, token: string, isAdmin?: boolean) => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => {
+  const [formData, setFormData] = useState<LoginRequest>({
+    username: '',
+    password: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const handleInputChange = (field: keyof LoginRequest) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+    setError(null); // Clear error when user types
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setSuccess("Login successful!");
-          onLoginSuccess(); 
-        } else {
-          setError("Invalid username or password.");
-        }
-      } else {
-        setError("Invalid username or password.");
-      }
+      // Use real API
+      const response = await AuthService.login(formData);
+      
+      // Store auth data in localStorage
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      onLoginSuccess(response.user, response.token, response.isAdmin);
     } catch (err) {
-      console.error("Login error:", err);
-      setError("Something went wrong. Please try again.");
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const isFormValid = formData.username.trim() !== '' && formData.password.trim() !== '';
+
   return (
-    <>
-      <style>{`
-        .login-container { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 1); width: 320px; margin: 5% auto; }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        button { width: 100%; background-color: #667eea; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.3s ease; }
-        button:hover { background-color: #5563c1; }
-        .error { color: #e74c3c; text-align: center; margin-top: 10px; }
-        .success { color: #27ae60; text-align: center; margin-top: 10px; }
-      `}</style>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '60vh',
+      }}
+    >
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          width: '100%',
+          maxWidth: 400,
+          borderRadius: 2,
+        }}
+      >
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
+         <img
+            src={logo}
+            alt="Logo"
+            style={{ width: '250px', height: '100px', margin: '0 auto', display: 'block' }}
+          />
+          <Typography variant="body2" color="text.secondary">
+            Sign in to continue to your account
+          </Typography>
+        </Box>
 
-      <div className="login-container">
-        <h2>Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <TextField
+            fullWidth
+            label="Username"
+            type="text"
+            value={formData.username}
+            onChange={handleInputChange('username')}
+            margin="normal"
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Mail size={20} color="#666" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 2 }}
+          />
 
-          <button type="submit">Login</button>
-        </form>
+          <TextField
+            fullWidth
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            value={formData.password}
+            onChange={handleInputChange('password')}
+            margin="normal"
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock size={20} color="#666" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <EyeOff /> : <Eye />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 3 }}
+          />
 
-        {error && <div className="error">{error}</div>}
-        {success && <div className="success">{success}</div>}
-      </div>
-    </>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={!isFormValid || isLoading}
+            sx={{
+              py: 1.5,
+              mb: 2,
+              bgcolor: '#2563eb',
+              '&:hover': {
+                bgcolor: '#1d4ed8',
+              },
+            }}
+          >
+            {isLoading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Sign In'
+            )}
+          </Button>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              {/* Don't have an account?{' '}
+              <Link
+                component="button"
+                variant="body2"
+                onClick={onSwitchToRegister}
+                sx={{ cursor: 'pointer' }}
+              >
+                Sign up
+              </Link> */}
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
   );
 };
-
-export default Login;

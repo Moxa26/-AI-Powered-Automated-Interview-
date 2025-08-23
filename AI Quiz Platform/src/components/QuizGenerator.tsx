@@ -104,10 +104,10 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
             </Box>
             <Box>
               <Typography variant="h5" fontWeight={700} color="text.primary">
-                Software Engineering Quiz Generator
+              AI Quiz Generator App
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Generate coding quizzes for software engineers
+              Create self-learning tests instantly with AI
               </Typography>
             </Box>
           </Stack>
