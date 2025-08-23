@@ -1,124 +1,190 @@
-# AI-Powered Quiz Generator
+# Interview Buzz - AI-Powered Coding Quiz Platform
 
-A modern React application that generates custom quizzes using Google's Gemini AI. Built with TypeScript, Material-UI, and deployed on GitHub Pages.
+A modern React TypeScript application that generates and administers coding quizzes using Google's Generative AI. Features include user authentication, quiz generation, quiz taking, and result tracking.
 
-## 🚀 Live Demo
+## Features
 
-**[Try the Quiz Generator →](https://gourav8jain.github.io/react_gemini-quiz)**
+- 🔐 **User Authentication**: Login and registration system with JWT tokens
+- 🤖 **AI Quiz Generation**: Generate quizzes using Google's Gemini AI
+- 📝 **Multiple Question Types**: Multiple choice, code input, and true/false questions
+- 🎯 **Topic Coverage**: HTML, Python, .NET, C#, and SQL
+- 📊 **Quiz Results**: Track performance and review answers
+- 🎨 **Modern UI**: Built with Material-UI and Lucide React icons
+- 📱 **Responsive Design**: Works on desktop and mobile devices
+- 🌐 **Real API Integration**: Connected to your authentication backend
 
-## 📸 Screenshot
+## Tech Stack
 
-*[Add a screenshot of your app here - you can take one from the live demo or local development]*
+### Frontend
+- React 19 with TypeScript
+- Material-UI (MUI) for components
+- Lucide React for icons
+- React Context for state management
 
-## ✨ Features
+### Backend (Your API)
+- **Login Endpoint**: `POST /api/login`
+- **Request Format**: `{ "username": "string", "password": "string" }`
+- **Response**: JWT token and user data
+- **Authentication**: Bearer token in Authorization header
 
-- **AI-Powered Quiz Generation**: Create quizzes on any topic using Google's Gemini AI
-- **Customizable Settings**: Choose difficulty level, number of questions, and question types
-- **Interactive Quiz Taking**: Beautiful UI with progress tracking and timer
-- **Detailed Results**: Get comprehensive feedback with explanations for each answer
-- **Responsive Design**: Works perfectly on desktop and mobile devices
-- **Modern Tech Stack**: Built with React 19, TypeScript, and Material-UI
-
-## 🛠️ Tech Stack
-
-- **Frontend**: React 19 with TypeScript
-- **UI Framework**: Material-UI (MUI) v7
-- **AI Integration**: Google Gemini AI API
-- **Icons**: Lucide React
-- **Deployment**: GitHub Pages
-- **Build Tool**: Create React App
-
-## 🎯 How It Works
-
-1. **Generate Quiz**: Enter any topic (JavaScript, World History, Biology, etc.)
-2. **Customize**: Set difficulty (Easy/Medium/Hard), number of questions (3-15), and type (Multiple Choice/True-False)
-3. **Take Quiz**: Answer questions with a beautiful, interactive interface
-4. **Review Results**: See your score, time taken, and detailed explanations
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v16 or higher)
 - npm or yarn
-- Google Gemini AI API key
 
-### Installation
+### Frontend Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/gourav8jain/react_gemini-quiz.git
-   cd react_gemini-quiz
-   ```
-
-2. **Install dependencies**
+1. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   Add your Google Gemini AI API key to the `.env` file:
-   ```
-   REACT_APP_GEMINI_API_KEY=your_api_key_here
-   ```
-
-4. **Start development server**
+2. **Start the development server:**
    ```bash
    npm start
    ```
+   
+   The app will open at `http://localhost:3000`
 
-5. **Open your browser**
-   Navigate to `http://localhost:3000`
+### Backend Setup (Optional)
 
-## 📦 Deployment
-
-This app is deployed on GitHub Pages. To deploy your own version:
-
-1. **Fork the repository**
-2. **Update the homepage URL** in `package.json`:
-   ```json
-   "homepage": "https://yourusername.github.io/react_gemini-quiz"
-   ```
-3. **Deploy to GitHub Pages**:
+1. **Navigate to the server directory:**
    ```bash
-   npm run deploy
+   cd server
    ```
 
-## 🔧 Project Structure
+2. **Install server dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start the mock server:**
+   ```bash
+   npm start
+   ```
+   
+   The server will run at `http://localhost:3001`
+
+   **Note:** If you don't start the backend server, the app will automatically fall back to mock authentication functions.
+
+## Usage
+
+### Authentication
+
+- **Demo Login**: Use `Jeminee` / `Admin@123` to test the app
+- **API Endpoint**: `http://192.168.1.79:5000/api/login`
+- **Registration**: Create a new account with your details (if register endpoint exists)
+- **Login**: Sign in with your registered credentials
+
+### API Integration
+
+The app is now connected to your real authentication API:
+
+```bash
+# Login Request
+curl --location 'http://192.168.1.79:5000/api/login' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "username": "Jeminee",
+    "password": "Admin@123"
+}'
+```
+
+The app automatically:
+- Sends requests to your API endpoint
+- Handles JWT token storage
+- Falls back to mock authentication if the API is unavailable
+- Manages user sessions and logout
+
+### Quiz Generation
+
+1. Select a programming topic (HTML, Python, .NET, C#, SQL)
+2. Choose difficulty level (Easy, Medium, Hard)
+3. Select number of questions
+4. Choose question types
+5. Click "Generate Quiz" to create a new quiz
+
+### Taking Quizzes
+
+- Answer questions based on your knowledge
+- For code questions, type your code in the provided editor
+- Submit answers to see immediate feedback
+- Review results and explanations
+
+## Project Structure
 
 ```
 src/
 ├── components/          # React components
+│   ├── AuthWrapper.tsx # Authentication wrapper
+│   ├── Login.tsx       # Login form
+│   ├── Register.tsx    # Registration form
 │   ├── QuizGenerator.tsx
 │   ├── QuizTaker.tsx
 │   └── QuizResults.tsx
+├── contexts/           # React contexts
+│   └── AuthContext.tsx # Authentication context
 ├── services/           # API services
+│   ├── authService.ts  # Authentication service
 │   └── geminiService.ts
 ├── types/              # TypeScript type definitions
-│   └── quiz.ts
+│   ├── auth.ts         # Authentication types
+│   └── quiz.ts         # Quiz-related types
 └── App.tsx            # Main application component
 ```
 
-## 🤝 Contributing
+## API Endpoints
+
+When using the mock server, the following endpoints are available:
+
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
+- `GET /auth/me` - Get current user (requires authentication)
+- `GET /health` - Health check
+
+## Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+REACT_APP_GEMINI_API_KEY=your_gemini_api_key_here
+REACT_APP_API_BASE_URL=http://localhost:3001
+```
+
+## Development
+
+### Running Tests
+```bash
+npm test
+```
+
+### Building for Production
+```bash
+npm run build
+```
+
+### Deploying
+```bash
+npm run deploy
+```
+
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-## 📄 License
+## License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the MIT License.
 
-## 👨‍💻 Author
+## Support
 
-**Gourav Jain**
-- GitHub: [@gourav8jain](https://github.com/gourav8jain)
-- Project: [React Gemini Quiz Generator](https://github.com/gourav8jain/react_gemini-quiz)
+For support or questions, please open an issue in the GitHub repository.
 
 ---
 
-⭐ **Star this repository if you found it helpful!**
+Built with ❤️ by Gourav

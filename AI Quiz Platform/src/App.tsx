@@ -1,18 +1,22 @@
 import { useState } from 'react';
-import { AppBar, Toolbar, Typography, Container, Box, Link, Stack, Paper } from '@mui/material';
-import { Code2, Zap, BookOpen, Target } from 'lucide-react';
+import { AppBar, Toolbar, Typography, Container, Box, Link, Stack, Paper, Button, Avatar, Menu, MenuItem } from '@mui/material';
+import { Code2, Zap, BookOpen, Target, LogOut, User } from 'lucide-react';
 import { QuizGenerator } from './components/QuizGenerator';
 import { QuizTaker } from './components/QuizTaker';
 import { QuizResults } from './components/QuizResults';
+import { AuthWrapper } from './components/AuthWrapper';
+import { useAuth } from './contexts/AuthContext';
 import type { Quiz, QuizResult } from './types/quiz';
 
 const primary = '#2563eb';
 const secondary = '#f5f6fa';
 
-function App() {
+function AppContent() {
   const [currentView, setCurrentView] = useState<'generator' | 'quiz' | 'results'>('generator');
   const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+  const { user, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleQuizGenerated = (quiz: Quiz) => {
     setCurrentQuiz(quiz);
@@ -28,6 +32,19 @@ function App() {
     setCurrentView('generator');
     setCurrentQuiz(null);
     setQuizResult(null);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    handleMenuClose();
   };
 
   const renderContent = () => {
@@ -66,13 +83,53 @@ function App() {
             </Box>
             <Box>
               <Typography variant="h6" fontWeight={700} color="text.primary">
-                Software Engineering Quiz Generator
+                Interview Buzz
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Create and take coding quizzes instantly
+                Master your coding skills with AI-powered quizzes
               </Typography>
             </Box>
           </Stack>
+
+          {/* User Menu */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button
+              onClick={handleMenuOpen}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                color: 'text.primary',
+                textTransform: 'none',
+                '&:hover': {
+                  bgcolor: 'rgba(0,0,0,0.04)',
+                },
+              }}
+            >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: primary }}>
+                <User size={16} />
+              </Avatar>
+              <Typography variant="body2" fontWeight={500}>
+                {user?.name}
+              </Typography>
+            </Button>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  minWidth: 200,
+                },
+              }}
+            >
+              <MenuItem onClick={handleLogout} sx={{ gap: 1 }}>
+                <LogOut size={16} />
+                Logout
+              </MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -93,6 +150,14 @@ function App() {
         </Container>
       </Paper>
     </Box>
+  );
+}
+
+function App() {
+  return (
+    <AuthWrapper>
+      <AppContent />
+    </AuthWrapper>
   );
 }
 
