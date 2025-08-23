@@ -14,6 +14,7 @@ import {
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { AuthService } from '../services/authService';
 import type { LoginRequest } from '../types/auth';
+import logo from "../Quiz_logo.jpg"
 
 interface LoginProps {
   onSwitchToRegister: () => void;
@@ -81,9 +82,11 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess
         }}
       >
         <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
-            Welcome Back
-          </Typography>
+         <img
+            src={logo}
+            alt="Logo"
+            style={{ width: '250px', height: '100px', margin: '0 auto', display: 'block' }}
+          />
           <Typography variant="body2" color="text.secondary">
             Sign in to continue to your account
           </Typography>

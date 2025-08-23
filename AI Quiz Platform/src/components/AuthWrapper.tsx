@@ -78,7 +78,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
         <Box sx={{ bgcolor: 'white', borderBottom: 1, borderColor: '#e0e0e0', py: 2 }}>
           <Container maxWidth="md">
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ p: 2, bgcolor: '#e0e7ff', borderRadius: 2, display: 'flex', alignItems: 'center' }}>
+              {/* <Box sx={{ p: 2, bgcolor: '#e0e7ff', borderRadius: 2, display: 'flex', alignItems: 'center' }}>
                 <Code2 size={28} color="#2563eb" />
               </Box>
               <Box>
@@ -88,7 +88,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
                 <Typography variant="body2" color="text.secondary">
                   Master your coding skills with AI-powered quizzes
                 </Typography>
-              </Box>
+              </Box> */}
             </Box>
           </Container>
         </Box>
@@ -112,10 +112,11 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
         <Paper elevation={0} sx={{ bgcolor: 'white', borderTop: 1, borderColor: '#e0e0e0', py: 2 }} square>
           <Container maxWidth="md">
             <Typography align="center" variant="body2" color="text.secondary">
-              Built by Gourav •{' '}
+              Built By Webashlar 
+             {/* •{' '}
               <a href="https://github.com" target="_blank" rel="noopener" style={{ color: '#2563eb', textDecoration: 'none' }}>
                 View Source
-              </a>
+              </a> */}
             </Typography>
           </Container>
         </Paper>

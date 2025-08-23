@@ -135,7 +135,7 @@ function AppContent() {
       <AppBar position="static" color="inherit" elevation={1} sx={{ mb: 4 }}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Box sx={{ p: 1, bgcolor: '#e0e7ff', borderRadius: 2, display: 'flex', alignItems: 'center' }}>
+            {/* <Box sx={{ p: 1, bgcolor: '#e0e7ff', borderRadius: 2, display: 'flex', alignItems: 'center' }}>
               <Code2 size={28} color={primary} />
             </Box>
             <Box>
@@ -145,7 +145,7 @@ function AppContent() {
               <Typography variant="body2" color="text.secondary">
                 Master your coding skills with AI-powered quizzes
               </Typography>
-            </Box>
+            </Box> */}
             
             {/* Navigation buttons */}
             {user?.isAdmin && (
@@ -226,10 +226,11 @@ function AppContent() {
       <Paper elevation={0} sx={{ bgcolor: 'white', borderTop: 1, borderColor: '#e0e0e0', py: 2, mt: 4 }} square>
         <Container maxWidth="md">
           <Typography align="center" variant="body2" color="text.secondary">
-            Built by Gourav •{' '}
+        Built by WebAshlar 
+        {/* •{' '}
             <Link href="https://github.com" target="_blank" rel="noopener" color="primary">
               View Source
-            </Link>
+            </Link> */} 
           </Typography>
         </Container>
       </Paper>
