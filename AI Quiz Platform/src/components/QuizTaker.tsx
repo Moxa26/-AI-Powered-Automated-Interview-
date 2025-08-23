@@ -20,10 +20,15 @@ import {
 
 // Import ace editor modes and themes
 import 'ace-builds/src-noconflict/mode-javascript';
+import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-python';
+import 'ace-builds/src-noconflict/mode-java';
+import 'ace-builds/src-noconflict/mode-golang';
+import 'ace-builds/src-noconflict/mode-rust';
 import 'ace-builds/src-noconflict/mode-html';
 import 'ace-builds/src-noconflict/mode-csharp';
 import 'ace-builds/src-noconflict/mode-sql';
+import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-monokai';
 import 'ace-builds/src-noconflict/theme-github';
 
@@ -44,6 +49,36 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
     setTextAnswers(new Array(quiz.questions.length).fill(''));
   }, [quiz.questions.length]);
 
+  // Add additional paste prevention at document level for code input questions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const currentQ = quiz.questions[currentQuestionIndex];
+      if (currentQ && currentQ.questionType === 'code-input') {
+        // Prevent Ctrl+V (paste), Ctrl+C (copy), Ctrl+X (cut)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'c' || e.key === 'x')) {
+          e.preventDefault();
+          alert('❌ Copy/Cut/Paste operations are disabled for coding questions. Please write the code yourself.');
+        }
+      }
+    };
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const currentQ = quiz.questions[currentQuestionIndex];
+      if (currentQ && currentQ.questionType === 'code-input') {
+        e.preventDefault();
+        alert('❌ Paste operation is disabled. Please write the code yourself to demonstrate your coding skills.');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('paste', handlePaste);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [currentQuestionIndex, quiz.questions]);
+
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;
   const hasAnsweredCurrent = currentQuestion.questionType === 'code-input' 
@@ -62,13 +97,63 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
     setTextAnswers(newTextAnswers);
   };
 
+  // Prevent copy and paste operations for code input questions
+  const handleCodeEditorLoad = (editor: any) => {
+    // Disable paste operation
+    editor.commands.addCommand({
+      name: 'disablePaste',
+      bindKey: { win: 'Ctrl-V', mac: 'Cmd-V' },
+      exec: () => {
+        // Show alert when user tries to paste
+        alert('❌ Paste operation is disabled. Please write the code yourself to demonstrate your coding skills.');
+        return false;
+      }
+    });
+
+    // Disable copy operation
+    editor.commands.addCommand({
+      name: 'disableCopy',
+      bindKey: { win: 'Ctrl-C', mac: 'Cmd-C' },
+      exec: () => {
+        // Show alert when user tries to copy
+        alert('❌ Copy operation is disabled.');
+        return false;
+      }
+    });
+
+    // Disable cut operation
+    editor.commands.addCommand({
+      name: 'disableCut',
+      bindKey: { win: 'Ctrl-X', mac: 'Cmd-X' },
+      exec: () => {
+        // Show alert when user tries to cut
+        alert('❌ Cut operation is disabled.');
+        return false;
+      }
+    });
+
+    // Also disable right-click context menu
+    editor.container.addEventListener('contextmenu', (e: Event) => {
+      e.preventDefault();
+      alert('❌ Right-click menu is disabled to prevent copy/paste operations.');
+    });
+  };
+
   const evaluateCodeAnswer = (userCode: string, expectedCode: string, language: string): boolean => {
+    // Add null/undefined checks to prevent runtime errors
+    if (!userCode || !expectedCode) {
+      return false;
+    }
+    
     if (!userCode.trim() || !expectedCode.trim()) {
       return false;
     }
 
     // Remove extra whitespace and normalize
     const normalizeCode = (code: string) => {
+      if (!code) {
+        return '';
+      }
       return code
         .replace(/\s+/g, ' ') // Replace multiple spaces with single space
         .replace(/;\s*}/g, '}') // Handle semicolon before closing brace
@@ -100,6 +185,11 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
   };
 
   const evaluateSQLAnswer = (userCode: string, expectedCode: string): boolean => {
+    // Add null checks to prevent errors
+    if (!userCode || !expectedCode) {
+      return false;
+    }
+    
     // Check basic SQL structure requirements
     const expectedWords = expectedCode.split(/\s+/).filter(word => word.length > 1);
     const userWords = userCode.split(/\s+/);
@@ -174,6 +264,11 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
   };
 
   const evaluateGeneralCodeAnswer = (userCode: string, expectedCode: string): boolean => {
+    // Add null checks to prevent errors
+    if (!userCode || !expectedCode) {
+      return false;
+    }
+    
     const expectedWords = expectedCode.split(/\s+/).filter(word => word.length > 2);
     const userWords = userCode.split(/\s+/);
     
@@ -206,7 +301,7 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
     const timeTaken = Date.now() - timeStarted.getTime();
     const correctAnswers = quiz.questions.filter((question, index) => {
       if (question.questionType === 'code-input') {
-        const userCode = textAnswers[index];
+        const userCode = textAnswers[index] || '';
         const expectedCode = question.expectedAnswer || '';
         return evaluateCodeAnswer(userCode, expectedCode, question.codeLanguage || 'javascript');
       } else {
@@ -223,9 +318,9 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
       answers: quiz.questions.map((question, index) => ({
         questionId: question.id,
         selectedAnswer: question.questionType === 'code-input' ? undefined : selectedAnswers[index],
-        textAnswer: question.questionType === 'code-input' ? textAnswers[index] : undefined,
+        textAnswer: question.questionType === 'code-input' ? (textAnswers[index] || '') : undefined,
         isCorrect: question.questionType === 'code-input' 
-          ? evaluateCodeAnswer(textAnswers[index], question.expectedAnswer || '', question.codeLanguage || 'javascript')
+          ? evaluateCodeAnswer(textAnswers[index] || '', question.expectedAnswer || '', question.codeLanguage || 'javascript')
           : selectedAnswers[index] === question.correctAnswer,
       })),
       completedAt: new Date(),
@@ -247,11 +342,16 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
 
   const getAceMode = (language: string) => {
     switch (language.toLowerCase()) {
+      case 'javascript': return 'javascript';
+      case 'typescript': return 'typescript';
       case 'python': return 'python';
+      case 'java': return 'java';
+      case 'go': return 'golang';
+      case 'rust': return 'rust';
       case 'html': return 'html';
       case 'csharp': return 'csharp';
       case 'sql': return 'sql';
-      case 'javascript': return 'javascript';
+      case 'json': return 'json';
       default: return 'text';
     }
   };
@@ -291,6 +391,7 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
               theme="github"
               value={textAnswers[currentQuestionIndex] || ''}
               onChange={handleTextAnswerChange}
+              onLoad={handleCodeEditorLoad}
               name={`code-editor-${currentQuestionIndex}`}
               editorProps={{ $blockScrolling: true }}
               width="100%"
@@ -315,7 +416,7 @@ export const QuizTaker: React.FC<QuizTakerProps> = ({ quiz, onQuizComplete, onBa
           
           <Alert severity="info" sx={{ mb: 2 }}>
             <Typography variant="body2">
-              💡 Tip: Write clean, readable code. Consider edge cases, best practices, and make sure your syntax is correct.
+              💡 Tip: Write clean, readable code by yourself. Copy/paste operations are disabled to ensure you demonstrate your actual coding skills. Consider edge cases, best practices, and make sure your syntax is correct.
             </Typography>
           </Alert>
         </Box>

@@ -16,6 +16,8 @@ import {
   Alert,
   InputLabel,
   FormControl,
+  Chip,
+  SelectChangeEvent,
 } from '@mui/material';
 
 interface QuizGeneratorProps {
@@ -24,7 +26,7 @@ interface QuizGeneratorProps {
 
 export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated }) => {
   const [settings, setSettings] = useState<QuizSettings>({
-    topic: 'Python',
+    topics: ['JavaScript'],
     difficulty: 'medium',
     numQuestions: 5,
     questionType: 'mixed',
@@ -41,21 +43,35 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
     setError(null);
   };
 
+  const handleTopicsChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    const topicsArray = typeof value === 'string' ? value.split(',') : value;
+    setSettings((prev) => ({
+      ...prev,
+      topics: topicsArray as SoftwareEngineeringTopic[],
+    }));
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!settings.topic) {
-      setError('Please select a topic');
+    if (!settings.topics || settings.topics.length === 0) {
+      setError('Please select at least one topic');
       return;
     }
     setIsGenerating(true);
     setError(null);
     try {
       const response = await geminiService.generateQuiz(settings);
+      const topicsNames = settings.topics.map(topic => SOFTWARE_TOPICS[topic].name).join(' & ');
+      const topicsDescriptions = settings.topics.map(topic => SOFTWARE_TOPICS[topic].description).join(', ');
+      const primaryCodeLanguage = SOFTWARE_TOPICS[settings.topics[0]]?.codeLanguage || 'text';
+      
       const quiz: Quiz = {
         id: Date.now().toString(),
-        title: `${SOFTWARE_TOPICS[settings.topic].name} Quiz for Software Engineers`,
-        description: `A ${settings.difficulty} level ${SOFTWARE_TOPICS[settings.topic].description} quiz for software engineers`,
-        topic: settings.topic,
+        title: `${topicsNames} Quiz for Software Engineers`,
+        description: `A ${settings.difficulty} level ${topicsDescriptions} quiz for software engineers`,
+        topics: settings.topics,
         difficulty: settings.difficulty,
         questions: response.questions.map((q, index) => ({
           id: index.toString(),
@@ -65,7 +81,7 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
           explanation: q.explanation,
           questionType: q.questionType,
           codeSnippet: q.codeSnippet,
-          codeLanguage: q.codeLanguage || SOFTWARE_TOPICS[settings.topic].codeLanguage,
+          codeLanguage: q.codeLanguage || primaryCodeLanguage,
           expectedAnswer: q.expectedAnswer, // Store for evaluation but don't display
         })),
         createdAt: new Date(),
@@ -99,14 +115,26 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <Stack spacing={3}>
               <FormControl fullWidth>
-                <InputLabel id="topic-label">Programming Topic *</InputLabel>
+                <InputLabel id="topics-label">Programming Topics *</InputLabel>
                 <Select
-                  labelId="topic-label"
-                  value={settings.topic}
-                  label="Programming Topic *"
-                  onChange={(e) => handleInputChange('topic', e.target.value as SoftwareEngineeringTopic)}
+                  labelId="topics-label"
+                  multiple
+                  value={settings.topics}
+                  label="Programming Topics *"
+                  onChange={handleTopicsChange}
                   disabled={isGenerating}
                   required
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(selected as string[]).map((value) => (
+                        <Chip 
+                          key={value} 
+                          label={SOFTWARE_TOPICS[value as SoftwareEngineeringTopic].name}
+                          size="small"
+                        />
+                      ))}
+                    </Box>
+                  )}
                 >
                   {Object.entries(SOFTWARE_TOPICS).map(([key, value]) => (
                     <MenuItem key={key} value={key}>
@@ -176,7 +204,7 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
                 color="primary"
                 fullWidth
                 size="large"
-                disabled={isGenerating || !settings.topic}
+                disabled={isGenerating || !settings.topics || settings.topics.length === 0}
                 startIcon={isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
               >
                 {isGenerating ? 'Generating Software Engineering Quiz...' : 'Generate Quiz'}
