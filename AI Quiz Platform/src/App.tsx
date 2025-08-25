@@ -53,10 +53,6 @@ function AppContent() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [user]);
 
-  const handleLoginSuccess = () => {
-    setCurrentView('generator');
-  };
-
   const handleQuizGenerated = (quiz: Quiz) => {
     setCurrentQuiz(quiz);
     setCurrentView('quiz');
@@ -96,17 +92,23 @@ function AppContent() {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'login':
-        return <Login onLoginSuccess={handleLoginSuccess} />;
       case 'generator':
         return <QuizGenerator onQuizGenerated={handleQuizGenerated} />;
       case 'quiz':
         return currentQuiz ? (
-          <QuizTaker quiz={currentQuiz} onQuizComplete={handleQuizComplete} onBack={handleBackToGenerator} />
+          <QuizTaker
+            quiz={currentQuiz}
+            onQuizComplete={handleQuizComplete}
+            onBack={handleBackToGenerator}
+          />
         ) : null;
       case 'results':
         return currentQuiz && quizResult ? (
-          <QuizResults quiz={currentQuiz} result={quizResult} onBack={handleBackToGenerator} />
+          <QuizResults
+            quiz={currentQuiz}
+            result={quizResult}
+            onBack={handleBackToGenerator}
+          />
         ) : null;
       case 'admin':
         return user?.isAdmin ? (
@@ -125,12 +127,12 @@ function AppContent() {
           </Box>
         );
       default:
-        return null;
+        return <QuizGenerator onQuizGenerated={handleQuizGenerated} />;
     }
   };
 
   return (
-    <>
+    <Box minHeight="100vh" bgcolor={secondary} display="flex" flexDirection="column">
       {/* Header */}
       <AppBar position="static" color="inherit" elevation={1} sx={{ mb: 4 }}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
@@ -221,7 +223,9 @@ function AppContent() {
       </AppBar>
 
       {/* Main Content */}
-      <Container sx={{ mt: 4 }}>{renderContent()}</Container>
+      <Container maxWidth="md" sx={{ flex: 1, py: 4 }}>
+        {renderContent()}
+      </Container>
 
       {/* Footer */}
       <Paper elevation={0} sx={{ bgcolor: 'white', borderTop: 1, borderColor: '#e0e0e0', py: 2, mt: 4 }} square>
