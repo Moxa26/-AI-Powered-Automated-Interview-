@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Brain, Loader2, Sparkles, Code2 } from 'lucide-react';
 import type { QuizSettings, Quiz, SoftwareEngineeringTopic } from '../types/quiz';
 import { SOFTWARE_TOPICS } from '../types/quiz';
@@ -22,18 +22,32 @@ import {
 
 interface QuizGeneratorProps {
   onQuizGenerated: (quiz: Quiz) => void;
+  autoStart?: boolean;
+  initialSettings?: Partial<QuizSettings>;
 }
 
-export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated }) => {
+export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ 
+  onQuizGenerated, 
+  autoStart = false, 
+  initialSettings = {} 
+}) => {
   const [settings, setSettings] = useState<QuizSettings>({
     topics: ['JavaScript'],
     difficulty: 'medium',
     numQuestions: 5,
     questionType: 'mixed',
+    ...initialSettings,
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-start quiz generation if autoStart is true
+  React.useEffect(() => {
+    if (autoStart && settings.topics.length > 0) {
+      handleSubmitInternal();
+    }
+  }, [autoStart]);
 
   const handleInputChange = (field: keyof QuizSettings, value: string | number) => {
     setSettings((prev) => ({
@@ -53,8 +67,7 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
     setError(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitInternal = async () => {
     if (!settings.topics || settings.topics.length === 0) {
       setError('Please select at least one topic');
       return;
@@ -94,6 +107,11 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSubmitInternal();
+  };
+
   return (
     <Box display="flex" justifyContent="center" alignItems="flex-start" minHeight="60vh">
       <Card sx={{ width: '100%', maxWidth: 600, p: 2, boxShadow: 3 }}>
@@ -104,10 +122,13 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({ onQuizGenerated })
             </Box>
             <Box>
               <Typography variant="h5" fontWeight={700} color="text.primary">
-              AI Quiz Generator App
+                {autoStart && isGenerating ? 'Generating Your Personalized Quiz...' : 'AI Quiz Generator App'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-              Create self-learning tests instantly with AI
+                {autoStart && isGenerating 
+                  ? 'Please wait while we create your quiz based on your preferences' 
+                  : 'Create self-learning tests instantly with AI'
+                }
               </Typography>
             </Box>
           </Stack>

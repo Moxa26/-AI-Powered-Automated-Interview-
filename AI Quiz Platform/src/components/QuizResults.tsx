@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Trophy, ArrowLeft, Share2, Code } from 'lucide-react';
+import { CheckCircle, XCircle, Trophy, ArrowLeft, Code } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Quiz, QuizResult } from '../types/quiz';
@@ -41,26 +41,7 @@ export const QuizResults: React.FC<QuizResultsProps> = ({ quiz, result, onBack }
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const handleShare = async () => {
-    const shareText = `I scored ${Math.round(result.score)}% on the ${quiz.title}! 🎯`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Quiz Results',
-          text: shareText,
-        });
-      } catch (error) {
-        // ignore
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareText);
-        alert('Results copied to clipboard!');
-      } catch (error) {
-        // ignore
-      }
-    }
-  };
+
 
   return (
     <Box display="flex" justifyContent="center" alignItems="flex-start" minHeight="60vh">
@@ -252,9 +233,6 @@ export const QuizResults: React.FC<QuizResultsProps> = ({ quiz, result, onBack }
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
             <Button onClick={onBack} variant="outlined" color="inherit" startIcon={<ArrowLeft />}>
               Generate New Quiz
-            </Button>
-            <Button onClick={handleShare} variant="contained" color="primary" startIcon={<Share2 />}>
-              Share Results
             </Button>
           </Stack>
         </CardContent>

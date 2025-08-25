@@ -1,4 +1,4 @@
-import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../types/auth';
+import type { LoginRequest, RegisterRequest, AuthResponse, User, CreateUserRequest } from '../types/auth';
 import type { QuizResult, Quiz } from '../types/quiz';
 
 const API_BASE_URL = process.env.BACK_END_POINT || 'http://192.168.1.79:4000/api'; // Quiz score API endp
@@ -29,7 +29,6 @@ export class AuthService {
 
   static async login(credentials: LoginRequest): Promise<{ user: User; token: string; message: string; isAdmin: boolean }> {
     try {
-      debugger;
       // Transform the request to match your API format
       const apiRequest = {
         username: credentials.username, // Use username directly
@@ -48,8 +47,22 @@ export class AuthService {
         username: response.user?.username || credentials.username,
         name: response.user?.username || credentials.username, // Use username as name
         isAdmin: response.user?.is_admin || false,
-        createdAt: new Date(),
+        createdAt: response.user?.created_at ? new Date(response.user.created_at) : new Date(),
         lastLoginAt: new Date(),
+        // Handle both nested and direct preference formats
+        quizPreferences: response.user?.quiz_preferences ? {
+          topic: response.user.quiz_preferences.topic,
+          difficulty: response.user.quiz_preferences.difficulty,
+          question_type: response.user.quiz_preferences.question_type
+        } : (response.user?.topic && response.user?.difficulty && response.user?.question_type) ? {
+          topic: response.user.topic,
+          difficulty: response.user.difficulty,
+          question_type: response.user.question_type
+        } : undefined,
+        // Store direct preference fields as well for compatibility
+        topic: response.user?.topic,
+        difficulty: response.user?.difficulty,
+        question_type: response.user?.question_type,
       };
 
       return {
@@ -222,5 +235,34 @@ export class AuthService {
     if (score >= 70) return 'Good work! Keep it up!';
     if (score >= 60) return 'Not bad! Room for improvement.';
     return 'Keep practicing! You can do better!';
+  }
+
+  // Fetch quiz data by users for admin dashboard
+  static async getQuizByUsers(): Promise<any[]> {
+    try {
+      const response = await this.makeRequest<{success: boolean; quizzes: any[]}>('/quiz-by-users', {
+        method: 'GET',
+      });
+
+      return response.quizzes || [];
+    } catch (error) {
+      console.error('Failed to fetch quiz data:', error);
+      throw error;
+    }
+  }
+
+  // Create user with quiz preferences for admin
+  static async createUserWithQuizPreferences(userData: CreateUserRequest): Promise<{ success: boolean; message: string; user?: any }> {
+    try {
+      const response = await this.makeRequest<{ success: boolean; message: string; user?: any }>('/users-with-quiz', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Failed to create user:', error);
+      throw error;
+    }
   }
 }
