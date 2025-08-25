@@ -36,13 +36,7 @@ app.post("/api/login", async (req, res) => {
       res.json({
         success: true,
         message: "Login successful",
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          name: user.name,
-          is_admin: user.is_admin
-        }
+        user: user
       });
     } else {
       res.status(401).json({ success: false, message: "Invalid credentials" });
@@ -121,7 +115,6 @@ app.get("/api/quizzesDetail/:id", async (req, res) => {
 app.post("/api/save-quiz-score", async (req, res) => {
   const {
     userId,
-    quizId,
     scorePercent,
     correctAnswers,
     totalQuestions,
@@ -132,16 +125,15 @@ app.post("/api/save-quiz-score", async (req, res) => {
   try {
     const insertQuery = `
       INSERT INTO quiz_results (
-        user_id, quiz_id, score_percent, correct_answers,
+        user_id, score_percent, correct_answers,
         total_questions, time_taken, feedback
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *;
     `;
 
     const values = [
       userId,
-      quizId,
       scorePercent,
       correctAnswers,
       totalQuestions,
@@ -214,6 +206,7 @@ app.get("/api/quiz-by-users", async (req, res) => {
         question_type AS quiz_question_type,
         created_at
       FROM users
+      WHERE is_admin = false 
       ORDER BY created_at DESC
     `);
 
