@@ -85,7 +85,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess
          <img
             src={logo}
             alt="Logo"
-            style={{ width: '150px', height: '120px', margin: '0 auto', display: 'block' }}
+            style={{ width: '150px', height: '120px', margin: '0 auto', display: 'block', objectFit: 'contain' }}
           />
           <Typography variant="body2" color="text.secondary">
             Sign in to continue to your account

@@ -109,6 +109,9 @@ function AppContent() {
     
     const { topic, difficulty, question_type } = preferences;
     
+    // Parse comma-separated topics from login response
+    const topicList = typeof topic === 'string' ? topic.split(',').map(t => t.trim()) : [topic];
+    
     // Map topic to software engineering topics - handle both old and new formats
     const topicMapping: { [key: string]: SoftwareEngineeringTopic } = {
       // New format (SOFTWARE_TOPICS keys)
@@ -141,6 +144,9 @@ function AppContent() {
       'Geography': 'JavaScript',
     };
     
+    // Map parsed topics to valid SoftwareEngineeringTopic values
+    const mappedTopics = topicList.map(t => topicMapping[t] || 'JavaScript').filter((topic, index, self) => self.indexOf(topic) === index);
+    
     // Map question type - handle both old and new formats
     const questionTypeMapping: { [key: string]: 'multiple-choice' | 'code-input' | 'true-false' | 'mixed' } = {
       // New format
@@ -155,7 +161,7 @@ function AppContent() {
     };
     
     return {
-      topics: [topicMapping[topic] || 'JavaScript'] as SoftwareEngineeringTopic[],
+      topics: mappedTopics.length > 0 ? mappedTopics as SoftwareEngineeringTopic[] : ['JavaScript'] as SoftwareEngineeringTopic[],
       difficulty: difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
       questionType: questionTypeMapping[question_type] || 'mixed',
       numQuestions: 5,
@@ -236,7 +242,7 @@ function AppContent() {
              <img
             src={logo}
             alt="Logo"
-            style={{ width: '130px', height: '90px', margin: '0 auto', display: 'block' }}
+            style={{ width: '130px', height: '90px', margin: '0 auto', display: 'block', objectFit: 'contain' }}
           />
             </Box>
             

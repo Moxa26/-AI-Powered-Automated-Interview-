@@ -7,12 +7,12 @@ export interface User {
   lastLoginAt?: Date;
   // Support both nested and direct preference formats
   quizPreferences?: {
-    topic: string;
+    topic: string; // Can be comma-separated values like "JavaScript,C#"
     difficulty: string;
     question_type: string;
   };
-  // Direct preference fields (new format)
-  topic?: string;
+  // Direct preference fields (new format) - topic can be comma-separated
+  topic?: string; // Can be comma-separated values like "JavaScript,C#"
   difficulty?: string;
   question_type?: string;
 }
