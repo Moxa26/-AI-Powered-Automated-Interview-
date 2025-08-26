@@ -240,7 +240,7 @@ function AppContent() {
           />
             </Box>
             
-            {/* Navigation buttons - only show Quiz button for admin users */}
+            {/* Navigation buttons - only show Quiz button for admin users
             {user?.isAdmin && currentView === 'admin' && (
               <Stack direction="row" spacing={1} sx={{ ml: 4 }}>
                 <Button
@@ -251,7 +251,7 @@ function AppContent() {
                   Back to Quiz
                 </Button>
               </Stack>
-            )}
+            )} */}
           </Stack>
 
           {/* User Menu */}
