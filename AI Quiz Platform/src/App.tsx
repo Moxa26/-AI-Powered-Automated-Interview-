@@ -9,7 +9,7 @@ import { AuthWrapper } from './components/AuthWrapper';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
 import type { Quiz, QuizResult, SoftwareEngineeringTopic } from './types/quiz';
-import logo from "./Quiz_logo.jpg"
+import logo from "./logo.png"
  
 
 const primary = '#2563eb';
@@ -236,7 +236,7 @@ function AppContent() {
              <img
             src={logo}
             alt="Logo"
-            style={{ width: '250px', height: '80px', margin: '0 auto', display: 'block' }}
+            style={{ width: '130px', height: '90px', margin: '0 auto', display: 'block' }}
           />
             </Box>
             
