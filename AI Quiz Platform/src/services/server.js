@@ -164,9 +164,9 @@ app.post("/api/save-quiz-score", async (req, res) => {
 
 // Create User
 app.post("/api/users-with-quiz", async (req, res) => {
-  const { username, password, topic, difficulty, question_type } = req.body;
+  const { username, password, topic, difficulty, question_type, number_of_questions } = req.body;
 
-  if (!username || !password || !topic || !difficulty || !question_type) {
+  if (!username || !password || !topic || !difficulty || !question_type || !number_of_questions) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
@@ -175,10 +175,10 @@ app.post("/api/users-with-quiz", async (req, res) => {
     await client.query("BEGIN");
 
     const userResult = await client.query(
-      `INSERT INTO users (username, password_hash, topic, difficulty, question_type)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, username, topic, difficulty, question_type, created_at`,
-      [username, password, topic, difficulty, question_type]
+      `INSERT INTO users (username, password_hash, topic, difficulty, question_type, number_of_questions)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, username, topic, difficulty, question_type, number_of_questions, created_at`,
+      [username, password, topic, difficulty, question_type, number_of_questions]
     );
 
     const user = userResult.rows[0];
@@ -204,6 +204,7 @@ app.get("/api/quiz-by-users", async (req, res) => {
         topic AS quiz_topic,
         difficulty AS quiz_difficulty,
         question_type AS quiz_question_type,
+        number_of_questions,
         created_at
       FROM users
       WHERE is_admin = false 
@@ -227,6 +228,7 @@ app.get("/api/quiz-by-user/:id", async (req, res) => {
         topic AS quiz_topic,
         difficulty AS quiz_difficulty,
         question_type AS quiz_question_type,
+        number_of_questions,
         created_at
       FROM users
       WHERE id = $1
@@ -244,9 +246,9 @@ app.get("/api/quiz-by-user/:id", async (req, res) => {
 
 app.put("/api/update-user-with-quiz/:userId", async (req, res) => {
   const { userId } = req.params;
-  const { username, password, topic, difficulty, question_type } = req.body;
+  const { username, password, topic, difficulty, question_type, number_of_questions } = req.body;
 
-  if (!username || !password || !topic || !difficulty || !question_type) {
+  if (!username || !password || !topic || !difficulty || !question_type || !number_of_questions) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
@@ -257,10 +259,10 @@ app.put("/api/update-user-with-quiz/:userId", async (req, res) => {
     // Update user with quiz fields directly
     const userResult = await client.query(
       `UPDATE users 
-       SET username = $1, password_hash = $2, topic = $3, difficulty = $4, question_type = $5
-       WHERE id = $6
-       RETURNING id, username, topic, difficulty, question_type, created_at`,
-      [username, password, topic, difficulty, question_type, userId]
+       SET username = $1, password_hash = $2, topic = $3, difficulty = $4, question_type = $5, number_of_questions = $6
+       WHERE id = $7
+       RETURNING id, username, topic, difficulty, question_type, number_of_questions, created_at`,
+      [username, password, topic, difficulty, question_type, number_of_questions, userId]
     );
 
     if (userResult.rows.length === 0) {

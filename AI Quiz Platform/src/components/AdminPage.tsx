@@ -41,6 +41,7 @@ interface QuizData {
   quiz_topic: string;
   quiz_difficulty: string;
   quiz_question_type: string;
+  number_of_questions: number;
   created_at: string;
 }
 
@@ -59,7 +60,8 @@ export const AdminPage: React.FC = () => {
     password: '',
     topic: [], // Changed to array for multiple selection
     difficulty: '',
-    question_type: ''
+    question_type: '',
+    number_of_questions: 5
   });
 
   // Fetch quiz data on component mount
@@ -148,14 +150,15 @@ export const AdminPage: React.FC = () => {
       password: '',
       topic: [], // Reset as empty array
       difficulty: '',
-      question_type: ''
+      question_type: '',
+      number_of_questions: 5
     });
     setOpenUserDialog(true);
   };
 
   const handleCreateUser = async () => {
     const topics = Array.isArray(newUser.topic) ? newUser.topic : [newUser.topic];
-    if (!newUser.username || !newUser.password || topics.length === 0 || !newUser.difficulty || !newUser.question_type) {
+    if (!newUser.username || !newUser.password || topics.length === 0 || !newUser.difficulty || !newUser.question_type || !newUser.number_of_questions) {
       setError(t('addUser.allRequired'));
       return;
     }
@@ -370,13 +373,14 @@ export const AdminPage: React.FC = () => {
                         <TableCell sx={{ fontWeight: 600 }}>{t('admin.topic')}</TableCell>
                         <TableCell sx={{ fontWeight: 600 }}>{t('admin.difficulty')}</TableCell>
                         <TableCell sx={{ fontWeight: 600 }}>{t('admin.questionType')}</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>{t('addUser.numberOfQuestions')}</TableCell>
                         <TableCell sx={{ fontWeight: 600 }}>{t('admin.createdAt')}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {paginatedQuizzes.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                          <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
                             <Typography variant="body1" color="text.secondary">
                               {searchQuery ? t('admin.noResults') : t('admin.noQuizzes')}
                             </Typography>
@@ -416,6 +420,11 @@ export const AdminPage: React.FC = () => {
                             <TableCell>
                               <Typography variant="body2">
                                 {quiz.quiz_question_type}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" color="primary">
+                                {quiz.number_of_questions} Questions
                               </Typography>
                             </TableCell>
                             <TableCell>
@@ -541,6 +550,21 @@ export const AdminPage: React.FC = () => {
                 <MenuItem value="multiple-choice">{t('questionType.multipleChoice')}</MenuItem>
                 <MenuItem value="code-input">{t('questionType.codeInput')}</MenuItem>
                 <MenuItem value="true-false">{t('questionType.trueFalse')}</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth required>
+              <InputLabel>{t('addUser.numberOfQuestions')}</InputLabel>
+              <Select
+                value={newUser.number_of_questions}
+                label={t('addUser.numberOfQuestions')}
+                onChange={(e) => setNewUser({ ...newUser, number_of_questions: Number(e.target.value) })}
+              >
+                <MenuItem value={5}>5 Questions</MenuItem>
+                <MenuItem value={10}>10 Questions</MenuItem>
+                <MenuItem value={15}>15 Questions</MenuItem>
+                <MenuItem value={20}>20 Questions</MenuItem>
+                <MenuItem value={25}>25 Questions</MenuItem>
+                <MenuItem value={30}>30 Questions</MenuItem>
               </Select>
             </FormControl>
           </Stack>

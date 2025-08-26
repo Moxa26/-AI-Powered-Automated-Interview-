@@ -35,6 +35,7 @@ export interface CreateUserRequest {
   topic: string | string[]; // Support both single and multiple topics
   difficulty: string;
   question_type: string;
+  number_of_questions: number;
 }
 
 export interface AuthResponse {
